@@ -44,7 +44,7 @@ def main():
     parser.add_argument('--no-benchmark', action='store_false', dest='benchmark', help='Turn cudnn benchmark mode off')
     parser.add_argument('-d', '--distributed', action='store_true', dest='distributed', help='Use distributed training')
     parser.add_argument('--local_rank', dest='local_rank', default=0, type=int, help='Use distributed training')
-    parser.add_argument('-g', '--num_gpus', dest='num_gpus', default=4, type=int, help='The number of accessible gpus')
+    parser.add_argument('-g', '--num_gpus', dest='num_gpus', default=1, type=int, help='The number of accessible gpus')
     parser.set_defaults(debug=False)
     parser.set_defaults(benchmark=True)
 

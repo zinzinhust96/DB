@@ -1,0 +1,4 @@
+{
+    "python.linting.enabled": false,
+    "python.pythonPath": "/opt/anaconda/envs/db/bin/python"
+}

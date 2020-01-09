@@ -99,6 +99,9 @@ class SegDetectorRepresenter(Configurable):
             else:
                 continue
             box = box.reshape(-1, 2)
+            if len(box) == 0:
+                print('no contour')
+                continue
             _, sside = self.get_mini_boxes(box.reshape((-1, 1, 2)))
             if sside < self.min_size + 2:
                 continue
@@ -167,7 +170,7 @@ class SegDetectorRepresenter(Configurable):
         expanded = np.array(offset.Execute(distance))
         return expanded
 
-    def get_mini_boxes(self, contour):
+    def get_mini_boxes(self, contour):        
         bounding_box = cv2.minAreaRect(contour)
         points = sorted(list(cv2.boxPoints(bounding_box)), key=lambda x: x[0])
 

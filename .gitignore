@@ -119,3 +119,9 @@ results
 *.pyx
 struture/representers/setup.py
 demo_results
+
+# pretrained models
+models
+
+# test dataset
+*test

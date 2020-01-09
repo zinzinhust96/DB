@@ -20,6 +20,7 @@ class Trainer:
         self.model_saver.dir_path = self.logger.save_dir(
             self.model_saver.dir_path)
         self.current_lr = 0
+        self.best_fmeasure = -1
 
         self.total = 0
 
@@ -158,6 +159,12 @@ class Trainer:
                 else:
                     all_matircs[key] = metric
 
+            # save best model
+            if all_matircs[name + '/fmeasure'] > self.best_fmeasure:
+                if self.best_fmeasure != -1:
+                   self.model_saver.save_model(model, epoch) 
+                self.best_fmeasure = all_matircs[name + '/fmeasure']
+
         for key, metric in all_matircs.items():
             self.logger.info('%s : %f (%d)' % (key, metric.avg, metric.count))
         self.logger.metrics(epoch, self.steps, all_matircs)
@@ -170,13 +177,13 @@ class Trainer:
         for i, batch in tqdm(enumerate(data_loader), total=len(data_loader)):
             pred = model.forward(batch, training=False)
             output = self.structure.representer.represent(batch, pred)
-            raw_metric, interested = self.structure.measurer.validate_measure(
+            raw_metric = self.structure.measurer.validate_measure(
                 batch, output)
             raw_metrics.append(raw_metric)
 
             if visualize and self.structure.visualizer:
                 vis_image = self.structure.visualizer.visualize(
-                    batch, output, interested)
+                    batch, output, {})
                 vis_images.update(vis_image)
         metrics = self.structure.measurer.gather_measure(
             raw_metrics, self.logger)

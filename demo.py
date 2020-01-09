@@ -7,6 +7,8 @@ import numpy as np
 from experiment import Structure, Experiment
 from concern.config import Configurable, Config
 import math
+from glob import glob
+import time
 
 def main():
     parser = argparse.ArgumentParser(description='Text Recognition Training')
@@ -39,8 +41,12 @@ def main():
     experiment_args = conf.compile(conf.load(args['exp']))['Experiment']
     experiment_args.update(cmd=args)
     experiment = Configurable.construct_class_from_config(experiment_args)
-
-    Demo(experiment, experiment_args, cmd=args).inference(args['image_path'], args['visualize'])
+    
+    demo = Demo(experiment, experiment_args, cmd=args)
+    paths = glob(args['image_path']+'/*')
+    for path in paths:
+        print(path)
+        demo.inference(path, args['visualize'])
 
 
 class Demo:
@@ -52,6 +58,11 @@ class Demo:
         model_saver = experiment.train.model_saver
         self.structure = experiment.structure
         self.model_path = self.args['resume']
+        self.init_torch_tensor()
+        self.model = self.init_model()
+        self.resume(self.model, self.model_path)
+        self.model.eval()
+        torch.save(self.model, 'entire_res50.pth')
 
     def init_torch_tensor(self):
         # Use gpu or not
@@ -74,6 +85,7 @@ class Demo:
         states = torch.load(
             path, map_location=self.device)
         model.load_state_dict(states, strict=False)
+
         print("Resumed from " + path)
 
     def resize_image(self, img):
@@ -123,19 +135,24 @@ class Demo:
                         res.write(result + ',' + str(score) + "\n")
         
     def inference(self, image_path, visualize=False):
-        self.init_torch_tensor()
-        model = self.init_model()
-        self.resume(model, self.model_path)
+        
         all_matircs = {}
-        model.eval()
+        
         batch = dict()
         batch['filename'] = [image_path]
         img, original_shape = self.load_image(image_path)
         batch['shape'] = [original_shape]
         with torch.no_grad():
             batch['image'] = img
-            pred = model.forward(batch, training=False)
+            print(img.shape)
+            start = time.time()
+            pred = self.model.forward(batch, training=False)
+            print(pred.shape)
+            heatmap = pred.squeeze(0).permute(1, 2, 0).cpu().data.numpy()
+            print(heatmap.shape)
             output = self.structure.representer.represent(batch, pred, is_output_polygon=self.args['polygon']) 
+            stop = time.time()
+            print(stop - start)
             if not os.path.isdir(self.args['result_dir']):
                 os.mkdir(self.args['result_dir'])
             self.format_output(batch, output)
@@ -143,6 +160,7 @@ class Demo:
             if visualize and self.structure.visualizer:
                 vis_image = self.structure.visualizer.demo_visualize(image_path, output)
                 cv2.imwrite(os.path.join(self.args['result_dir'], image_path.split('/')[-1].split('.')[0]+'.jpg'), vis_image)
+                cv2.imwrite(os.path.join(self.args['result_dir'], image_path.split('/')[-1].split('.')[0]+'_heat.jpg'), cv2.applyColorMap((heatmap*255).astype(np.uint8), cv2.COLORMAP_JET))
 
 if __name__ == '__main__':
     main()
