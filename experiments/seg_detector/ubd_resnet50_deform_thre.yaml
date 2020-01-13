@@ -40,15 +40,15 @@ define:
         model_saver: 
             class: ModelSaver
             dir_path: model
-            save_interval: 4500
+            save_interval: 9000
             signal_path: save
         scheduler: 
             class: OptimizerScheduler
             optimizer: "SGD"
             optimizer_args:
-                lr: 0.0001
+                lr: 0.00001
                 momentum: 0.9
-                weight_decay: 0.    
+                weight_decay: 0.0001    
             learning_rate:  
                 class: DecayLearningRate
                 epochs: 1200
@@ -57,25 +57,20 @@ define:
     validation: &validate
         class: ValidationSettings
         data_loaders:
-            # ubd:
-            #     class: DataLoader
-            #     dataset: ^validate_data
-            #     batch_size: 1
-            #     num_workers: 16
             ubd: 
                 class: DataLoader
                 dataset: ^validate_data
-                batch_size: 2
+                batch_size: 1
                 num_workers: 16
                 collect_fn:
                     class: ICDARCollectFN
         visualize: false
-        interval: 4500
+        interval: 18000
         exempt: 1
 
     logger:
         class: Logger
-        verbose: true
+        verbose: false
         level: info
         log_interval: 450
 

@@ -194,10 +194,10 @@ class L1BalanceCELoss(nn.Module):
         bce_loss = self.bce_loss(pred['binary'], batch['gt'], batch['mask'])
         metrics = dict(bce_loss=bce_loss)
         if 'thresh' in pred:
-            l1_loss, l1_metric = self.l1_loss(pred['thresh'], batch['thresh_map'], batch['thresh_mask'])
+            l1_loss, l1_metric = self.l1_loss(pred['thresh'], batch['thresh_map'], batch['thresh_mask']) 
             dice_loss = self.dice_loss(pred['thresh_binary'], batch['gt'], batch['mask'])
             metrics['thresh_loss'] = dice_loss
-            loss = dice_loss + self.l1_scale * l1_loss + bce_loss * self.bce_scale
+            loss = dice_loss + self.l1_scale * l1_loss + bce_loss * self.bce_scale # dice_loss: Ls (loss for the probability map), l1_loss: Lt, bce_loss: Lb (loss for the binary map)
             metrics.update(**l1_metric)
         else:
             loss = bce_loss
@@ -232,7 +232,7 @@ class L1BCEMiningLoss(nn.Module):
             batch['mask'], weights=bce_map + 1)
         metrics = dict(bce_loss=bce_loss)
         metrics['thresh_loss'] = dice_loss
-        loss = dice_loss + self.l1_scale * l1_loss + bce_loss * self.bce_scale
+        loss = dice_loss + self.l1_scale * l1_loss + bce_loss * self.bce_scale 
         metrics.update(**l1_metric)
         return loss, metrics
 

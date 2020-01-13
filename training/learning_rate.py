@@ -87,7 +87,7 @@ class PiecewiseConstantLearningRate(Configurable):
 
 
 class DecayLearningRate(Configurable):
-    lr = State(default=0.0001)
+    lr = State(default=0.00001)
     epochs = State(default=1200)
     factor = State(default=0.9)
 

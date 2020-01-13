@@ -114,7 +114,10 @@ class Demo:
             original_shape = batch['shape'][index]
             filename = batch['filename'][index]
             result_file_name = 'res_' + filename.split('/')[-1].split('.')[0] + '.txt'
-            result_file_path = os.path.join(self.args['result_dir'], result_file_name)
+            result_file_folder = os.path.join(self.args['result_dir'], self.args['resume'].split('/')[-1])
+            if not os.path.exists(result_file_folder):
+                os.makedirs(result_file_folder)
+            result_file_path = os.path.join(result_file_folder, result_file_name)
             boxes = batch_boxes[index]
             scores = batch_scores[index]
             if self.args['polygon']:
@@ -145,22 +148,26 @@ class Demo:
         with torch.no_grad():
             batch['image'] = img
             print(img.shape)
-            start = time.time()
+            start1 = time.time()
             pred = self.model.forward(batch, training=False)
-            print(pred.shape)
+            print('forward time:', time.time() - start1)
+
+            start2 = time.time()
+            # print(pred.shape)
             heatmap = pred.squeeze(0).permute(1, 2, 0).cpu().data.numpy()
-            print(heatmap.shape)
+            # print(heatmap.shape)
+            print('move to cpu time:', time.time() - start2)
+            print(time.time() - start1, '\n')
+
             output = self.structure.representer.represent(batch, pred, is_output_polygon=self.args['polygon']) 
-            stop = time.time()
-            print(stop - start)
             if not os.path.isdir(self.args['result_dir']):
                 os.mkdir(self.args['result_dir'])
             self.format_output(batch, output)
 
             if visualize and self.structure.visualizer:
                 vis_image = self.structure.visualizer.demo_visualize(image_path, output)
-                cv2.imwrite(os.path.join(self.args['result_dir'], image_path.split('/')[-1].split('.')[0]+'.jpg'), vis_image)
-                cv2.imwrite(os.path.join(self.args['result_dir'], image_path.split('/')[-1].split('.')[0]+'_heat.jpg'), cv2.applyColorMap((heatmap*255).astype(np.uint8), cv2.COLORMAP_JET))
+                cv2.imwrite(os.path.join(self.args['result_dir'], self.args['resume'].split('/')[-1], image_path.split('/')[-1].split('.')[0]+'.jpg'), vis_image)
+                cv2.imwrite(os.path.join(self.args['result_dir'], self.args['resume'].split('/')[-1], image_path.split('/')[-1].split('.')[0]+'_heat.jpg'), cv2.applyColorMap((heatmap*255).astype(np.uint8), cv2.COLORMAP_JET))
 
 if __name__ == '__main__':
     main()

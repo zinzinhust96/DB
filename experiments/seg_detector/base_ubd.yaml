@@ -7,12 +7,13 @@ define:
     class: ImageDataset
     data_dir:
         - '/hdd/UBD/background-images/data_generated/29_11/train/29_11_train/synth'
+        # - './datasets/ubd_2911_closeline/'
     data_list:
         - './datasets/29_11/train_list.txt'
+        # - './datasets/ubd_2911_closeline/test_list.txt'
     processes:
         - class: AugmentDetectionData
           augmenter_args:
-              - ['Fliplr', 0.5]
               - {'cls': 'Affine', 'rotate': [-10, 10]}
               - ['Resize', [0.5, 3.0]]
           only_resize: False
@@ -30,15 +31,15 @@ define:
   - name: validate_data
     class: ImageDataset
     data_dir:
-        - '/hdd/UBD/background-images/data_generated/29_11/train/29_11_train/synth'
+        - './datasets/ubd_2911_closeline/'
     data_list:
-        - './datasets/29_11/test_list.txt'
+        - './datasets/ubd_2911_closeline/test_list.txt'
     processes:
         - class: AugmentDetectionData
           augmenter_args:
               - ['Resize', {'width': 736, 'height': 736}]
           only_resize: True
-          keep_ratio: False
+          keep_ratio: True
         - class: MakeICDARData
         - class: MakeSegDetectionData
         - class: NormalizeImage

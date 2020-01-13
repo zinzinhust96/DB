@@ -160,10 +160,10 @@ class Trainer:
                     all_matircs[key] = metric
 
             # save best model
-            if all_matircs[name + '/fmeasure'] > self.best_fmeasure:
+            if all_matircs[name + '/fmeasure'].avg > self.best_fmeasure:
                 if self.best_fmeasure != -1:
                    self.model_saver.save_model(model, epoch) 
-                self.best_fmeasure = all_matircs[name + '/fmeasure']
+                self.best_fmeasure = all_matircs[name + '/fmeasure'].avg
 
         for key, metric in all_matircs.items():
             self.logger.info('%s : %f (%d)' % (key, metric.avg, metric.count))
