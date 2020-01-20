@@ -162,7 +162,7 @@ class SegDetectorRepresenter(Configurable):
             scores[index] = score
         return boxes, scores
 
-    def unclip(self, box, unclip_ratio=1.5):
+    def unclip(self, box, unclip_ratio=2.2):
         poly = Polygon(box)
         distance = poly.area * unclip_ratio / poly.length
         offset = pyclipper.PyclipperOffset()

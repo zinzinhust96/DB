@@ -1,3 +1,5 @@
 CUDA_VISIBLE_DEVICES=0 python train.py experiments/seg_detector/ubd_resnet50_deform_thre.yaml --resume workspace/SegDetectorModel-seg_detector/deformable_resnet50/L1BalanceCELoss/model/model_epoch_4_minibatch_108000 --start_iter 108000 --start_epoch 4 --validate
 
-CUDA_VISIBLE_DEVICES=0 python demo.py experiments/seg_detector/ubd_resnet50_deform_thre.yaml --image_path ubd_test --resume workspace/SegDetectorModel-seg_detector/deformable_resnet50/L1BalanceCELoss/model/model_epoch_4_minibatch_108000 --polygon --box_thresh 0.3 --visualize
+CUDA_VISIBLE_DEVICES=0 python eval.py experiments/seg_detector/ubd_resnet50_deform_thre.yaml --resume workspace/SegDetectorModel-seg_detector/deformable_resnet50/L1BalanceCELoss/model/model_latest --box_thresh 0.6 --speed
+
+CUDA_VISIBLE_DEVICES=0 python demo.py experiments/seg_detector/ubd_resnet50_deform_thre.yaml --image_path demo_results/ubd_test/ --resume workspace/SegDetectorModel-seg_detector/deformable_resnet50/L1BalanceCELoss/model/model_latest --box_thresh 0.3 --visualize

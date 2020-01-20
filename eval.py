@@ -93,6 +93,8 @@ class Eval:
                 self.logger.save_dir(model_saver.dir_path),
                 'final'))
         self.verbose = verbose
+        self.fpses = []
+        self.counter = 0
 
     def init_torch_tensor(self):
         # Use gpu or not
@@ -124,13 +126,18 @@ class Eval:
         start = time.time() 
         for _ in range(times):
             pred = model.forward(data)
+        time_cost = (time.time() - start) / times
         for _ in range(times):
             output = self.structure.representer.represent(batch, pred, is_output_polygon=False) 
-        time_cost = (time.time() - start) / times
         self.logger.info('Params: %s, Inference speed: %fms, FPS: %f' % (
             str(sum(p.numel() for p in model.parameters() if p.requires_grad)),
             time_cost * 1000, 1 / time_cost))
-        
+
+        self.fpses.append(1 / time_cost)
+        if self.counter == 50:
+            print('Average FPS: ', np.sum(self.fpses) / len(self.fpses))
+
+        self.counter += 1
         return time_cost
         
     def format_output(self, batch, output):

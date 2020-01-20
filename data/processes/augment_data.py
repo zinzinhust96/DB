@@ -32,6 +32,17 @@ class AugmentData(DataProcess):
         image = cv2.resize(image, (width, height))
         return image
 
+    def resize_image_on_long_side(self, img):
+        height, width, _ = img.shape
+        if height > width:
+            new_height = 1600
+            new_width = int(math.ceil(new_height / height * width / 32) * 32)
+        else:
+            new_width = 1600
+            new_height = int(math.ceil(new_width / width * height / 32) * 32)
+        resized_img = cv2.resize(img, (new_width, new_height))
+        return resized_img
+
     def process(self, data):
         image = data['image']
         aug = None
@@ -40,7 +51,7 @@ class AugmentData(DataProcess):
         if self.augmenter:
             aug = self.augmenter.to_deterministic()
             if self.only_resize:
-                data['image'] = self.resize_image(image)
+                data['image'] = self.resize_image_on_long_side(image)
             else:
                 data['image'] = aug.augment_image(image)
             self.may_augment_annotation(aug, data, shape)

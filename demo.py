@@ -41,12 +41,13 @@ def main():
     experiment_args = conf.compile(conf.load(args['exp']))['Experiment']
     experiment_args.update(cmd=args)
     experiment = Configurable.construct_class_from_config(experiment_args)
-    
     demo = Demo(experiment, experiment_args, cmd=args)
     paths = glob(args['image_path']+'/*')
-    for path in paths:
-        print(path)
+    t = time.time()
+    for k, path in enumerate(paths):
+        print("Test image {:d}/{:d}: {:s}".format(k+1, len(paths), path), end='\r')
         demo.inference(path, args['visualize'])
+    print("elapsed time : {}s".format(time.time() - t))
 
 
 class Demo:
@@ -138,36 +139,37 @@ class Demo:
                         res.write(result + ',' + str(score) + "\n")
         
     def inference(self, image_path, visualize=False):
-        
-        all_matircs = {}
-        
-        batch = dict()
-        batch['filename'] = [image_path]
-        img, original_shape = self.load_image(image_path)
-        batch['shape'] = [original_shape]
-        with torch.no_grad():
-            batch['image'] = img
-            print(img.shape)
-            start1 = time.time()
-            pred = self.model.forward(batch, training=False)
-            print('forward time:', time.time() - start1)
+        print('start')
+        with torch.autograd.profiler.profile(use_cuda=True) as prof:
+            all_matircs = {}        
+            batch = dict()
+            batch['filename'] = [image_path]
+            img, original_shape = self.load_image(image_path)
+            batch['shape'] = [original_shape]
+            
+            with torch.no_grad():            
+                batch['image'] = img
+                print(img.shape)
+                pred = self.model.forward(batch, training=False)
+                heatmap = pred.squeeze(0).permute(1, 2, 0).cpu().data.numpy()
 
-            start2 = time.time()
-            # print(pred.shape)
-            heatmap = pred.squeeze(0).permute(1, 2, 0).cpu().data.numpy()
-            # print(heatmap.shape)
-            print('move to cpu time:', time.time() - start2)
-            print(time.time() - start1, '\n')
+                output = self.structure.representer.represent(batch, pred, is_output_polygon=self.args['polygon']) 
+                if not os.path.isdir(self.args['result_dir']):
+                    os.mkdir(self.args['result_dir'])
+                self.format_output(batch, output)
 
-            output = self.structure.representer.represent(batch, pred, is_output_polygon=self.args['polygon']) 
-            if not os.path.isdir(self.args['result_dir']):
-                os.mkdir(self.args['result_dir'])
-            self.format_output(batch, output)
+                if visualize and self.structure.visualizer:
+                    vis_image = self.structure.visualizer.demo_visualize(image_path, output)
+                    cv2.imwrite(os.path.join(self.args['result_dir'], self.args['resume'].split('/')[-1], image_path.split('/')[-1].split('.')[0]+'.jpg'), vis_image)
+                    cv2.imwrite(os.path.join(self.args['result_dir'], self.args['resume'].split('/')[-1], image_path.split('/')[-1].split('.')[0]+'_heat.jpg'), cv2.applyColorMap((heatmap*255).astype(np.uint8), cv2.COLORMAP_JET))               
+        # print(prof)
+        torch.save(self.model, 'models/entire_model.pth')
+        cuda_time = sum([item.cuda_time for item in prof.function_events])/10e6
+        cpu_time = sum([item.cpu_time for item in prof.function_events])/10e6
+        print('CUDA TIME %6.4fs' %cuda_time)
+        print('CPU TIME %6.4fs' %cpu_time)
+        print('Total time %6.4fs' %(cuda_time + cpu_time))
 
-            if visualize and self.structure.visualizer:
-                vis_image = self.structure.visualizer.demo_visualize(image_path, output)
-                cv2.imwrite(os.path.join(self.args['result_dir'], self.args['resume'].split('/')[-1], image_path.split('/')[-1].split('.')[0]+'.jpg'), vis_image)
-                cv2.imwrite(os.path.join(self.args['result_dir'], self.args['resume'].split('/')[-1], image_path.split('/')[-1].split('.')[0]+'_heat.jpg'), cv2.applyColorMap((heatmap*255).astype(np.uint8), cv2.COLORMAP_JET))
 
 if __name__ == '__main__':
     main()

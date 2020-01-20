@@ -6,11 +6,11 @@ define:
   - name: train_data
     class: ImageDataset
     data_dir:
-        - '/hdd/UBD/background-images/data_generated/29_11/train/29_11_train/synth'
-        # - './datasets/ubd_2911_closeline/'
+        # - '/hdd/UBD/background-images/data_generated/29_11/train/29_11_train/synth'
+        - './datasets/ubd_2911_closeline/'
     data_list:
-        - './datasets/29_11/train_list.txt'
-        # - './datasets/ubd_2911_closeline/test_list.txt'
+        # - './datasets/29_11/train_list.txt'
+        - './datasets/ubd_2911_closeline/test_list.txt'
     processes:
         - class: AugmentDetectionData
           augmenter_args:
@@ -31,9 +31,9 @@ define:
   - name: validate_data
     class: ImageDataset
     data_dir:
-        - './datasets/ubd_2911_closeline/'
+        - './datasets/TD_TR/TD500/'
     data_list:
-        - './datasets/ubd_2911_closeline/test_list.txt'
+        - './datasets/TD_TR/TD500/test_list.txt'
     processes:
         - class: AugmentDetectionData
           augmenter_args:
